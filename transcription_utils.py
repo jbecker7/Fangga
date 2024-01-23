@@ -14,6 +14,7 @@ def loadManchuDict():
 def preprocessManchuWord(word):
     """Fixes romanization of Manchu words to match the dictionary"""
 
+    # Handle special characters and combinations first
     word = word.replace("k'", "K")
     word = word.replace("g'", "G")
     word = word.replace("h'", "H")
@@ -24,23 +25,38 @@ def preprocessManchuWord(word):
     word = word.replace("c'y", "C")
     word = word.replace("jy", "J")
     word = word.replace("ts", "Q")
+    word = word.replace("š", "x")
+    word = word.replace("ū", "v")
 
-    vowel = ["a", "e", "i", "o", "u", "v"]
+    # Process other characters
+    new_word = ""
     i = 0
     while i < len(word):
-        if word[i] == "g":  ##case of "ng+consonant" or final "ng".
-            if i < len(word) - 1:  ##not final "g"
-                if (
-                    word[i + 1] not in vowel and word[i - 1] == "n"
-                ):  # letter "g" in "ng+consonant" case
-                    word = word[: i - 1] + "N" + word[i + 1 :]
-            elif (
-                i == len(word) - 1 and word[i - 1] == "n"
-            ):  ##final "g", i.e. "ng" at the final part of a word.
-                word = word[: i - 1] + "N"
-        i += 1
+        if i < len(word) - 1 and word[i : i + 2] == "ng":
+            # Handle 'ng' as a single unit
+            new_word += "NG"
+            i += 2
+        else:
+            if word[i] == "g":
+                if i < len(word) - 1 and word[i + 1] not in [
+                    "a",
+                    "e",
+                    "i",
+                    "o",
+                    "u",
+                    "v",
+                ]:
+                    if i > 0 and word[i - 1] == "n":
+                        new_word = new_word[:-1] + "N"  # Replace 'n' with 'N'
+                    else:
+                        new_word += word[i]
+                else:
+                    new_word += word[i]
+            else:
+                new_word += word[i]
+            i += 1
 
-    return word
+    return new_word
 
 
 def romanizationToManchu(romanization):
