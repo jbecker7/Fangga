@@ -14,7 +14,10 @@ def loadManchuDict():
 def preprocessManchuWord(word):
     """Fixes romanization of Manchu words to match the dictionary"""
 
-    # Handle special characters and combinations first
+    # Convert the entire word to lowercase first for consistency
+    word = word.lower()
+
+    # Handle special characters and combinations next
     word = word.replace("k'", "K")
     word = word.replace("g'", "G")
     word = word.replace("h'", "H")
@@ -27,36 +30,12 @@ def preprocessManchuWord(word):
     word = word.replace("ts", "Q")
     word = word.replace("š", "x")
     word = word.replace("ū", "v")
+    word = word.replace("c", "q")
 
-    # Process other characters
-    new_word = ""
-    i = 0
-    while i < len(word):
-        if i < len(word) - 1 and word[i : i + 2] == "ng":
-            # Handle 'ng' as a single unit
-            new_word += "NG"
-            i += 2
-        else:
-            if word[i] == "g":
-                if i < len(word) - 1 and word[i + 1] not in [
-                    "a",
-                    "e",
-                    "i",
-                    "o",
-                    "u",
-                    "v",
-                ]:
-                    if i > 0 and word[i - 1] == "n":
-                        new_word = new_word[:-1] + "N"  # Replace 'n' with 'N'
-                    else:
-                        new_word += word[i]
-                else:
-                    new_word += word[i]
-            else:
-                new_word += word[i]
-            i += 1
+    # Directly replace 'ng' with 'NG' to handle it as a single unit
+    word = word.replace("ng", "NG")
 
-    return new_word
+    return word
 
 
 def romanizationToManchu(romanization):
@@ -64,11 +43,18 @@ def romanizationToManchu(romanization):
     preprocessed_word = preprocessManchuWord(romanization)
     dictmanchuletter = loadManchuDict()
     manjuword = ""
-    for letter in preprocessed_word:
-        if letter in dictmanchuletter:
-            manjuword += dictmanchuletter[letter]
+    i = 0
+    while i < len(preprocessed_word):
+        if i < len(preprocessed_word) - 1 and preprocessed_word[i : i + 2] == "NG":
+            # ng is really annoying lmao this works finally
+            manjuword += dictmanchuletter["NG"]
+            i += 2  # Skip the next character as 'NG' is already processed
+        elif preprocessed_word[i] in dictmanchuletter:
+            manjuword += dictmanchuletter[preprocessed_word[i]]
+            i += 1
         else:
-            manjuword += letter
+            manjuword += preprocessed_word[i]
+            i += 1
     return manjuword
 
 
